@@ -247,10 +247,10 @@ export default function Home() {
         mixer = new THREE.AnimationMixer(robot);
         gltf.animations.forEach((clip) => {
           if (clip.name.includes("Run")) {
-            runAction = mixer.clipAction(clip);
+            runAction = mixer!.clipAction(clip);
             runAction.setLoop(THREE.LoopRepeat, Infinity);
           } else if (clip.name.includes("idle")) {
-            idleAction = mixer.clipAction(clip);
+            idleAction = mixer!.clipAction(clip);
             idleAction.setLoop(THREE.LoopRepeat, Infinity);
           }
         });

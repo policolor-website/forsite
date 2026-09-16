@@ -50,6 +50,25 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
             gtag('config', 'AW-16698623368');
+            // Phone conversion tracking — same as forsite.ro
+            gtag('config', 'AW-16698623368/SCaRCPmPlZcbEIiLw5o-', {
+              'phone_conversion_number': '0785598779'
+            });
+            // gtag_report_conversion — official Google Ads conversion function
+            window.gtag_report_conversion = function(url) {
+              var callback = function() {
+                if (typeof(url) !== 'undefined') {
+                  window.location = url;
+                }
+              };
+              gtag('event', 'conversion', {
+                'send_to': 'AW-16698623368/SCaRCPmPlZcbEIiLw5o-',
+                'value': 1,
+                'currency': 'RON',
+                'event_callback': callback
+              });
+              return false;
+            };
           `}
         </Script>
 

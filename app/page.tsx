@@ -193,6 +193,7 @@ export default function Home() {
   const [currentSection, setCurrentSection] = useState(0);
   const [bubble, setBubble] = useState<string | null>(null);
   const [robotScreenPos, setRobotScreenPos] = useState({ x: 50, y: 25 });
+  const [menuOpen, setMenuOpen] = useState(false);
 
   // ============================================
   // Three.js — Robot 3D
@@ -374,11 +375,12 @@ export default function Home() {
     const scrollContainer = scrollRef.current;
     if (!scrollContainer) return;
 
-    // Disable manual scroll
+    // Disable manual scroll (keep overflow-y scroll for programmatic scrollTo)
     const preventScroll = (e: Event) => e.preventDefault();
     scrollContainer.addEventListener("wheel", preventScroll, { passive: false });
     scrollContainer.addEventListener("touchmove", preventScroll, { passive: false });
-    scrollContainer.style.overflow = "hidden";
+    scrollContainer.style.overflowY = "scroll";
+    scrollContainer.style.overflowX = "hidden";
 
     const TOTAL_SECTIONS = SERVICES.length + 2; // hero + services + CTA
     let sectionIndex = 0;
@@ -482,7 +484,7 @@ export default function Home() {
             };
             recapRafId = requestAnimationFrame(trackRecap);
             // After 3s: hide bubble and start going up immediately
-            setTimeout(() => {
+            const recapTimeout = setTimeout(() => {
               setBubble(null);
               cancelAnimationFrame(recapRafId);
               direction = -1;
@@ -493,6 +495,7 @@ export default function Home() {
               ctrl()?.setRunning(true);
               ctrl()?.setTargetX(-2);
             }, 3000);
+            timers.push(recapTimeout);
           }
         }
       }
@@ -520,6 +523,76 @@ export default function Home() {
 
   return (
     <div ref={scrollRef} className="fixed inset-0 overflow-y-scroll" style={{ scrollBehavior: "auto" }}>
+      {/* Header — logo stânga + hamburger meniu dreapta */}
+      <header className="fixed top-0 left-0 w-full z-[80] bg-black/95 backdrop-blur-sm border-b border-green-600/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          {/* Logo stânga */}
+          <a href="https://forsite.ro" className="flex items-center shrink-0">
+            <Image
+              src="/logo.png"
+              alt="Forsite Romania"
+              width={120}
+              height={40}
+              className="h-9 w-auto"
+              priority
+            />
+          </a>
+
+          {/* Hamburger button dreapta */}
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="flex flex-col justify-center items-center w-10 h-10 gap-1.5 z-[90]"
+            aria-label="Meniu"
+          >
+            <span className={`block w-6 h-0.5 bg-white transition-all duration-300 ${menuOpen ? "rotate-45 translate-y-2" : ""}`} />
+            <span className={`block w-6 h-0.5 bg-white transition-all duration-300 ${menuOpen ? "opacity-0" : ""}`} />
+            <span className={`block w-6 h-0.5 bg-white transition-all duration-300 ${menuOpen ? "-rotate-45 -translate-y-2" : ""}`} />
+          </button>
+        </div>
+
+        {/* Meniu dropdown */}
+        <nav
+          className={`fixed top-16 right-0 w-64 bg-black/98 border-l border-green-600/30 transition-transform duration-300 ${
+            menuOpen ? "translate-x-0" : "translate-x-full"
+          }`}
+          style={{ height: "calc(100vh - 4rem)" }}
+        >
+          <ul className="flex flex-col py-4">
+            {[
+              { label: "Acasa", href: "https://forsite.ro" },
+              { label: "Despre noi", href: "https://forsite.ro/despre-noi/" },
+              { label: "Servicii", href: "https://forsite.ro/servicii/" },
+              { label: "Creare Magazin Online", href: "https://forsite.ro/creare-magazin-online-personalizat/" },
+              { label: "Creare Site de Prezentare", href: "https://forsite.ro/creare-site-de-prezentare-personalizat/" },
+              { label: "Creare Aplicații Mobile", href: "https://forsite.ro/creare-aplicatii-mobile/" },
+              { label: "Promovare Online", href: "https://forsite.ro/promovare-online/" },
+              { label: "Optimizare SEO", href: "https://forsite.ro/optimizare-seo/" },
+              { label: "Portofoliu", href: "https://forsite.ro/portofoliu/" },
+              { label: "Stiri", href: "https://forsite.ro/blog-2/" },
+              { label: "Contact", href: "https://forsite.ro/contact/" },
+            ].map((item) => (
+              <li key={item.href}>
+                <a
+                  href={item.href}
+                  className="block px-6 py-3 text-white text-sm font-medium hover:bg-green-600/20 hover:text-green-400 transition-colors"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {item.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        {/* Overlay când meniu e deschis */}
+        {menuOpen && (
+          <div
+            className="fixed inset-0 top-16 bg-black/50 z-[75]"
+            onClick={() => setMenuOpen(false)}
+          />
+        )}
+      </header>
+
       {/* Robot 3D — small at bottom on mobile, larger on desktop */}
       <div
         ref={mountRef}

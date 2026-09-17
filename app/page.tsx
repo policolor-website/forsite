@@ -748,7 +748,7 @@ export default function Home() {
           <ServiceSection service={service} index={i} />
           {i === 0 && (
             <section
-              className="h-screen flex flex-col items-center justify-center bg-black px-6 gap-4"
+              className="h-screen flex flex-col items-center justify-center bg-black md:px-6 gap-4"
               data-video-section
             >
               <p className="text-lg md:text-2xl font-bold text-white tracking-wide uppercase">
@@ -758,7 +758,7 @@ export default function Home() {
                 muted
                 playsInline
                 preload="auto"
-                className="max-h-[75vh] max-w-full rounded-2xl shadow-xl border border-green-600/20"
+                className="w-full max-h-[75vh] object-contain rounded-2xl shadow-xl border border-green-600/20"
               >
                 <source src="/videos/magazin-online.mp4" type="video/mp4" />
               </video>
@@ -766,7 +766,7 @@ export default function Home() {
           )}
           {i === 1 && (
             <section
-              className="h-screen flex flex-col items-center justify-center bg-black px-6 gap-4"
+              className="h-screen flex flex-col items-center justify-center bg-black md:px-6 gap-4"
               data-video-section
             >
               <p className="text-lg md:text-2xl font-bold text-white tracking-wide uppercase">
@@ -776,7 +776,7 @@ export default function Home() {
                 muted
                 playsInline
                 preload="auto"
-                className="max-h-[75vh] max-w-full rounded-2xl shadow-xl border border-green-600/20"
+                className="w-full max-h-[75vh] object-contain rounded-2xl shadow-xl border border-green-600/20"
               >
                 <source src="/videos/site-prezentare.mp4" type="video/mp4" />
               </video>
@@ -784,7 +784,7 @@ export default function Home() {
           )}
           {i === 2 && (
             <section
-              className="h-screen flex flex-col items-center justify-center bg-black px-6 gap-4"
+              className="h-screen flex flex-col items-center justify-center bg-black md:px-6 gap-4"
               data-video-section
             >
               <p className="text-lg md:text-2xl font-bold text-white tracking-wide uppercase">
@@ -794,7 +794,7 @@ export default function Home() {
                 muted
                 playsInline
                 preload="auto"
-                className="max-h-[75vh] max-w-full rounded-2xl shadow-xl border border-green-600/20"
+                className="w-full max-h-[75vh] object-contain rounded-2xl shadow-xl border border-green-600/20"
               >
                 <source src="/videos/aplicatii-mobile.mp4" type="video/mp4" />
               </video>

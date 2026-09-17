@@ -386,9 +386,18 @@ export default function Home() {
     let sectionIndex = 0;
     let phase: "idle" | "running" = "idle";
     let direction: 1 | -1 = 1;
-    const SECTION_HEIGHT = window.innerHeight;
     const PAUSE_DURATION = 2500;
     const RUN_DURATION = 3000;
+
+    // Measure real section positions — service sections are content-sized, not viewport-height
+    let sectionOffsets: number[] = [];
+    const measureSections = () => {
+      sectionOffsets = Array.from(scrollContainer.querySelectorAll("section")).map(
+        (s) => (s as HTMLElement).offsetTop
+      );
+    };
+    measureSections();
+    window.addEventListener("resize", measureSections);
 
     let phaseTimer = PAUSE_DURATION; // Skip first pause — start running immediately
     let scrollStartY = 0;
@@ -432,15 +441,15 @@ export default function Home() {
           if (direction === 1 && sectionIndex < TOTAL_SECTIONS - 1) {
             phase = "running";
             phaseTimer = 0;
-            scrollStartY = sectionIndex * SECTION_HEIGHT;
-            scrollTargetY = (sectionIndex + 1) * SECTION_HEIGHT;
+            scrollStartY = sectionOffsets[sectionIndex];
+            scrollTargetY = sectionOffsets[sectionIndex + 1];
             ctrl()?.setRunning(true);
             ctrl()?.setTargetX(2);
           } else if (direction === -1 && sectionIndex > 0) {
             phase = "running";
             phaseTimer = 0;
-            scrollStartY = sectionIndex * SECTION_HEIGHT;
-            scrollTargetY = (sectionIndex - 1) * SECTION_HEIGHT;
+            scrollStartY = sectionOffsets[sectionIndex];
+            scrollTargetY = sectionOffsets[sectionIndex - 1];
             ctrl()?.setRunning(true);
             ctrl()?.setTargetX(-2);
           } else if (direction === 1 && sectionIndex === TOTAL_SECTIONS - 1) {
@@ -490,8 +499,8 @@ export default function Home() {
               direction = -1;
               phase = "running";
               phaseTimer = 0;
-              scrollStartY = sectionIndex * SECTION_HEIGHT;
-              scrollTargetY = (sectionIndex - 1) * SECTION_HEIGHT;
+              scrollStartY = sectionOffsets[sectionIndex];
+              scrollTargetY = sectionOffsets[sectionIndex - 1];
               ctrl()?.setRunning(true);
               ctrl()?.setTargetX(-2);
             }, 3000);
@@ -516,6 +525,7 @@ export default function Home() {
       timers.forEach(clearTimeout);
       cancelAnimationFrame(bubbleRafId);
       cancelAnimationFrame(recapRafId);
+      window.removeEventListener("resize", measureSections);
       scrollContainer.removeEventListener("wheel", preventScroll);
       scrollContainer.removeEventListener("touchmove", preventScroll);
     };

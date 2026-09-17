@@ -28,6 +28,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
+        {/* Preload robot 3D model — starts downloading immediately with the page */}
+        <link rel="preload" href="/robot.glb" as="fetch" crossOrigin="anonymous" />
+
         {/* Google Tag Manager */}
         <Script id="gtm" strategy="afterInteractive">
           {`

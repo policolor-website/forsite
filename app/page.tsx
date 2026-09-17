@@ -3,6 +3,7 @@
 import { useRef, useEffect, useState, Fragment } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import Image from "next/image";
 
@@ -253,6 +254,7 @@ export default function Home() {
 
     // Load robot
     const loader = new GLTFLoader();
+    loader.setMeshoptDecoder(MeshoptDecoder);
     let robot: THREE.Group | null = null;
     let mixer: THREE.AnimationMixer | null = null;
     let runAction: THREE.AnimationAction | null = null;
@@ -267,7 +269,8 @@ export default function Home() {
         const maxDim = Math.max(size.x, size.y, size.z);
         const scale = (isMobile ? 1.5 : 2) / maxDim;
         robot.scale.setScalar(scale);
-        robot.position.set(0, 0, 0);
+        // Start at left side directly — don't slide from center
+        robot.position.set(-2, 0, 0);
         robot.rotation.y = 0;
         scene.add(robot);
 
@@ -282,6 +285,9 @@ export default function Home() {
           }
         });
         if (idleAction) idleAction.play();
+
+        // Signal that robot is loaded — bubbles can now start
+        (window as any).__robotLoaded = true;
       },
       undefined,
       (err) => console.error("Error loading robot:", err)
@@ -435,12 +441,37 @@ export default function Home() {
     };
 
     const timers: ReturnType<typeof setTimeout>[] = [];
-    timers.push(setTimeout(() => showBubble("Bine ai venit! Pornim imediat!"), 1500));
-    timers.push(setTimeout(() => setBubble("Te voi ghida"), 3500));
-    timers.push(setTimeout(() => {
-      setBubble(null);
-      cancelAnimationFrame(bubbleRafId);
-    }, 5500));
+
+    // Start welcome bubbles + auto-scroll only after robot is loaded
+    // — avoids bubble/scroll appearing before robot
+    const startWelcomeBubbles = () => {
+      timers.push(setTimeout(() => showBubble("Bine ai venit! Pornim imediat!"), 500));
+      timers.push(setTimeout(() => setBubble("Te voi ghida"), 2500));
+      timers.push(setTimeout(() => {
+        setBubble(null);
+        cancelAnimationFrame(bubbleRafId);
+      }, 4500));
+      // Start auto-scroll tick after welcome sequence
+      timers.push(setTimeout(() => requestAnimationFrame(tick), 5000));
+    };
+
+    if ((window as any).__robotLoaded) {
+      // Robot already loaded (e.g. cached) — start immediately
+      startWelcomeBubbles();
+    } else {
+      // Wait for robot to load, then start bubbles + scroll
+      const checkLoaded = setInterval(() => {
+        if ((window as any).__robotLoaded) {
+          clearInterval(checkLoaded);
+          startWelcomeBubbles();
+        }
+      }, 50);
+      timers.push(setTimeout(() => {
+        clearInterval(checkLoaded);
+        // Fallback: start anyway after 10s even if robot failed
+        if (!(window as any).__robotLoaded) startWelcomeBubbles();
+      }, 10000) as unknown as ReturnType<typeof setTimeout>);
+    }
 
     // Video section support — robot waits for video to finish before scrolling on
     let waitingForVideo = false;
@@ -567,12 +598,7 @@ export default function Home() {
     ctrl()?.setTargetX(-2);
     ctrl()?.faceCamera();
 
-    const startTimeout = setTimeout(() => {
-      requestAnimationFrame(tick);
-    }, 5500); // Start after welcome bubbles
-
     return () => {
-      clearTimeout(startTimeout);
       timers.forEach(clearTimeout);
       cancelAnimationFrame(bubbleRafId);
       cancelAnimationFrame(recapRafId);
@@ -657,8 +683,7 @@ export default function Home() {
       {/* Robot 3D — small at bottom on mobile, larger on desktop */}
       <div
         ref={mountRef}
-        className="fixed bottom-0 left-0 w-full pointer-events-none z-50"
-        style={{ height: "30vh" }}
+        className="fixed bottom-0 left-0 w-full pointer-events-none z-50 h-[30vh] md:h-[50vh]"
       />
 
       {/* Speech bubble */}

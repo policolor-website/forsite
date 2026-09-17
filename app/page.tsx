@@ -19,6 +19,7 @@ const SERVICES = [
     description:
       "Dezvoltăm magazine online personalizate, optimizate pentru conversii și ușor de administrat. Integrări plăți, curier, stocuri.",
     image: "/images/magazin-online.jpg",
+    price: "de la 3000 lei",
     features: ["Integrare plăți", "Gestiune stocuri", "SEO optimizat", "Mobile friendly"],
   },
   {
@@ -26,6 +27,7 @@ const SERVICES = [
     description:
       "Site-uri de prezentare moderne care reflectă identitatea brandului tău și atrag clienți noi.",
     image: "/images/site-prezentare.avif",
+    price: "de la 1500 lei",
     features: ["Design personalizat", "Viteză încărcare", "SEO on-page", "Responsive"],
   },
   {
@@ -33,6 +35,7 @@ const SERVICES = [
     description:
       "Aplicații mobile native pentru Android și iOS, de la concept până la publicare în Google Play și App Store.",
     image: "/images/ios.avif",
+    price: "Contact pentru detalii",
     features: ["Kotlin / Swift", "React Native", "Google Play & App Store", "Notificări push"],
   },
 ];
@@ -134,6 +137,12 @@ function ServiceSection({
             <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">
               {service.title}
             </h2>
+            <p className="text-2xl md:text-3xl font-extrabold text-green-600 mb-2">
+              {service.price}
+            </p>
+            <p className="text-lg md:text-xl font-extrabold text-white tracking-wide uppercase mb-4">
+              Fără plată în avans
+            </p>
             <p className="text-lg text-white leading-relaxed mb-6">
               {service.description}
             </p>

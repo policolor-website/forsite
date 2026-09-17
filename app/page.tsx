@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, Fragment } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
@@ -382,7 +382,7 @@ export default function Home() {
     scrollContainer.style.overflowY = "scroll";
     scrollContainer.style.overflowX = "hidden";
 
-    const TOTAL_SECTIONS = SERVICES.length + 2; // hero + services + CTA
+    const TOTAL_SECTIONS = SERVICES.length + 5; // hero + services + 3 video sections + CTA
     let sectionIndex = 0;
     let phase: "idle" | "running" = "idle";
     let direction: 1 | -1 = 1;
@@ -433,32 +433,74 @@ export default function Home() {
       cancelAnimationFrame(bubbleRafId);
     }, 5500));
 
+    // Video section support — robot waits for video to finish before scrolling on
+    let waitingForVideo = false;
+
+    // Extract the transition logic so it can be called from both the timer path
+    // and the video-ended callback
+    const startNextRun = () => {
+      if (direction === 1 && sectionIndex < TOTAL_SECTIONS - 1) {
+        phase = "running";
+        phaseTimer = 0;
+        scrollStartY = sectionOffsets[sectionIndex];
+        scrollTargetY = sectionOffsets[sectionIndex + 1];
+        ctrl()?.setRunning(true);
+        ctrl()?.setTargetX(2);
+      } else if (direction === -1 && sectionIndex > 0) {
+        phase = "running";
+        phaseTimer = 0;
+        scrollStartY = sectionOffsets[sectionIndex];
+        scrollTargetY = sectionOffsets[sectionIndex - 1];
+        ctrl()?.setRunning(true);
+        ctrl()?.setTargetX(-2);
+      } else if (direction === 1 && sectionIndex === TOTAL_SECTIONS - 1) {
+        direction = -1;
+        phaseTimer = 0;
+      } else if (direction === -1 && sectionIndex === 0) {
+        direction = 1;
+        phaseTimer = 0;
+      }
+    };
+
     const tick = () => {
       phaseTimer += 16;
 
       if (phase === "idle") {
-        if (phaseTimer >= PAUSE_DURATION) {
-          if (direction === 1 && sectionIndex < TOTAL_SECTIONS - 1) {
-            phase = "running";
-            phaseTimer = 0;
-            scrollStartY = sectionOffsets[sectionIndex];
-            scrollTargetY = sectionOffsets[sectionIndex + 1];
-            ctrl()?.setRunning(true);
-            ctrl()?.setTargetX(2);
-          } else if (direction === -1 && sectionIndex > 0) {
-            phase = "running";
-            phaseTimer = 0;
-            scrollStartY = sectionOffsets[sectionIndex];
-            scrollTargetY = sectionOffsets[sectionIndex - 1];
-            ctrl()?.setRunning(true);
-            ctrl()?.setTargetX(-2);
-          } else if (direction === 1 && sectionIndex === TOTAL_SECTIONS - 1) {
-            direction = -1;
-            phaseTimer = 0;
-          } else if (direction === -1 && sectionIndex === 0) {
-            direction = 1;
-            phaseTimer = 0;
+        // Check if current section is a video section — robot waits for video to finish
+        const sections = scrollContainer.querySelectorAll("section");
+        const currentEl = sections[sectionIndex] as HTMLElement;
+        const isVideoSection = currentEl?.hasAttribute("data-video-section") === true;
+
+        if (isVideoSection) {
+          // Start video once, then wait for "ended" event before proceeding
+          if (!waitingForVideo) {
+            const video = currentEl.querySelector("video") as HTMLVideoElement;
+            if (video) {
+              waitingForVideo = true;
+              video.currentTime = 0;
+              video.play().catch(() => {
+                // If autoplay blocked, proceed after normal pause
+                waitingForVideo = false;
+                phaseTimer = PAUSE_DURATION;
+              });
+              const onVideoEnded = () => {
+                waitingForVideo = false;
+                startNextRun();
+              };
+              video.addEventListener("ended", onVideoEnded, { once: true });
+              timers.push(setTimeout(() => {
+                // Fallback: if video doesn't end within 60s, proceed anyway
+                if (waitingForVideo) {
+                  waitingForVideo = false;
+                  video.removeEventListener("ended", onVideoEnded);
+                  startNextRun();
+                }
+              }, 60000));
+            }
           }
+          // While waiting for video, skip the normal pause-duration check
+        } else if (phaseTimer >= PAUSE_DURATION) {
+          startNextRun();
         }
       } else if (phase === "running") {
         const progress = Math.min(phaseTimer / RUN_DURATION, 1);
@@ -691,9 +733,65 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Services */}
+      {/* Services + video sections */}
       {SERVICES.map((service, i) => (
-        <ServiceSection key={i} service={service} index={i} />
+        <Fragment key={i}>
+          <ServiceSection service={service} index={i} />
+          {i === 0 && (
+            <section
+              className="h-screen flex flex-col items-center justify-center bg-black px-6 gap-4"
+              data-video-section
+            >
+              <p className="text-lg md:text-2xl font-bold text-white tracking-wide uppercase">
+                Proiect in dezvoltare
+              </p>
+              <video
+                muted
+                playsInline
+                preload="auto"
+                className="max-h-[75vh] max-w-full rounded-2xl shadow-xl border border-green-600/20"
+              >
+                <source src="/videos/magazin-online.mp4" type="video/mp4" />
+              </video>
+            </section>
+          )}
+          {i === 1 && (
+            <section
+              className="h-screen flex flex-col items-center justify-center bg-black px-6 gap-4"
+              data-video-section
+            >
+              <p className="text-lg md:text-2xl font-bold text-white tracking-wide uppercase">
+                Proiect in dezvoltare
+              </p>
+              <video
+                muted
+                playsInline
+                preload="auto"
+                className="max-h-[75vh] max-w-full rounded-2xl shadow-xl border border-green-600/20"
+              >
+                <source src="/videos/site-prezentare.mp4" type="video/mp4" />
+              </video>
+            </section>
+          )}
+          {i === 2 && (
+            <section
+              className="h-screen flex flex-col items-center justify-center bg-black px-6 gap-4"
+              data-video-section
+            >
+              <p className="text-lg md:text-2xl font-bold text-white tracking-wide uppercase">
+                Proiect in dezvoltare
+              </p>
+              <video
+                muted
+                playsInline
+                preload="auto"
+                className="max-h-[75vh] max-w-full rounded-2xl shadow-xl border border-green-600/20"
+              >
+                <source src="/videos/aplicatii-mobile.mp4" type="video/mp4" />
+              </video>
+            </section>
+          )}
+        </Fragment>
       ))}
 
       {/* CTA */}
